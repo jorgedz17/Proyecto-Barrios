@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+         <title>TweetsApp</title>
+    </head>
+
+    <body>
+        <div style="text-align:center">
+        <h1>TweetsApp</h1>
+       
+        You are logged out!
+        Thanks for spending some quality time with TweetsApp today!
+
+        <h1>Login</h1>
+        <form id="login_form" method="post" action="/menuApp">
+            {% csrf_token %}
+            Username: <input type="text" name="username" value="" size="50" />
+            <br />
+            Password: <input type="password" name="password" value="" size="50" />
+            <br />
+
+            <input type="submit" value="submit" />
+        </form>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,2 @@
+##Comentarios de la carpeta
+- Esta carpeta tiene el settings principald el proyecto. Hay varias configuraciones del proyecto que estan comentadas que tienen relación con el proyecto original del profesor Victor Codocedo (la carpeta RiskmapAPP era la original), que fueron conservados pero no se ocupan en este proyecto.

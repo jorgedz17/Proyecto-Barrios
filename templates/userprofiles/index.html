@@ -1,0 +1,549 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block usuario %}
+<li><a href="/user/">Manejar Puntos</a></li>
+{% endblock %}
+
+{% block agregar_punto %}
+{% if exito %}
+    <div class="alert alert-dismissible alert-success">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <strong>Punto Agregado Exitosamente!</strong>
+    </div>
+{% endif %}
+{% if actualizacion %}
+    <div class="alert alert-dismissible alert-info">
+      <button type="submit" class="close" data-dismiss="alert">&times;</button>
+      <strong>Punto Actualizado con éxito</strong>
+    </div>
+{% endif %}
+{% if eliminado %}
+    <div class="alert alert-dismissible alert-info">
+      <button type="submit" class="close" data-dismiss="alert">&times;</button>
+      <strong>Punto Eliminado con éxito</strong>
+    </div>
+{% endif %}
+{% if error %}
+    <div class="alert alert-dismissible alert-warning">
+      <button type="submit" class="close" data-dismiss="alert">&times;</button>
+      <strong>No se pudo agregar el punto</strong>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block instrucciones %}
+	<p>Para agregar un marker en el mapa presiones el botón 'Marker', si desea quitar el marker haga click derecho sobre el. 
+		<br>Si quiere ver los sectores vecinales haga click en "Ver regiones".
+	</p>
+{% endblock %}
+
+
+{% block script %}
+<form name="formulario1" class="" action="/user/" method="post">
+	<input type="text" id="lat" name="lat" value="" hidden>
+	<input type="text"  id="lng" name="lng" value="" hidden>
+	<input type="text" id="tipo" name="tipo" value="" hidden>
+	<input type="text" id="actualizacion" name="actualizacion" value="0" hidden>
+	<input type="text"  id="pk" name="pk" value="" hidden>
+	<input type="text" id="nombre" name="nombre" value="" hidden>
+	{% csrf_token %}
+</form>
+
+<script type="text/javascript">
+	/********************************************************************
+		* copiar_enviar()
+	* función aux que copia valores del punto a crear y lo envia
+	* a para añadirlo en la base 
+	********************************************************************/
+	function copiar_enviar(){
+		document.getElementById("nombre").value=$("#nombre1").val();
+		document.getElementById("lat").value=$("#lat1").val();
+		document.getElementById("lng").value=$("#lng1").val();
+		document.getElementById("tipo").value=$("#tipo1").val();
+		document.formulario1.submit()
+	}
+	/********************************************************************
+		* copiar_actualizar(pk)
+	* funcion aux que copia la información a actualizar del punto pk y 
+	* lo envia para cambiarlo en la bd
+	********************************************************************/
+	function copiar_actualizar(pk){
+		document.getElementById("nombre").value=$("#nombre1").val();
+		document.getElementById("tipo").value=$("#tipo1").val();
+		document.getElementById("pk").value=pk;
+		document.getElementById("actualizacion").value=1;
+		document.formulario1.submit()
+	}
+	/********************************************************************
+		* copiar_actualizar(pk)
+	* funcion aux que copia la información a eliminar del punto pk y 
+	* lo envia para cambiarlo en la bd
+	********************************************************************/
+	function copiar_eliminar(pk){
+		document.getElementById("pk").value=pk;
+		document.getElementById("actualizacion").value=2;
+		document.formulario1.submit()
+	}
+
+</script>
+
+<script>
+	//create a global variable that will point to the tooltip in the DOM
+	var tipObj = null;
+
+	//offset along x and y in px
+	var offset = {x: 10, y: 10};
+
+	var coordPropName = null;
+
+	/********************************************************************
+		* moveTooltip(e)
+	* update the position of the tooltip based on the event data
+	********************************************************************/
+	function moveTooltip(event){
+			if(tipObj && event && coordPropName){
+				//position it
+			tipObj.style.top = event[coordPropName].clientY + window.scrollY + offset.y + "px";
+			tipObj.style.left = event[coordPropName].clientX + window.scrollX + offset.x + "px";
+		}
+	}
+
+	/********************************************************************
+		* deleteTooltip(e)
+	* delete the tooltip if it exists in the DOM
+	********************************************************************/
+	function deleteTooltip(event){
+			if(tipObj){
+				//delete the tooltip if it exists in the DOM
+				document.body.removeChild(tipObj);
+			tipObj = null;
+		}
+	}
+
+
+	var map;
+	var s = [];
+
+
+	/********************************************************************
+		* crearMarcador(place)
+	* Crea un marker a partir del place 
+	********************************************************************/
+	function crearMarcador(place){
+
+		var marker = new google.maps.Marker({
+			map: map,
+			position: place.geometry.location,
+		});
+
+		var point = marker.getPosition();
+		map.panTo(point);
+
+		var tipo = 0;
+		s.push('{"name":"'+place.name+'","lat":'+point.lat()+',"lng":'+point.lng()+',"tipo":"'+place.types[0]+'"},\n');
+	}
+
+	/********************************************************************
+		* initMap()
+	* Función que iniciliza el mapa 
+	********************************************************************/
+
+	function initMap() {
+
+
+		//inicia el mapa
+		map = new google.maps.Map(document.getElementById('map'), {
+			zoom: 6,
+			center: {lat: -33.046770, lng: -71.550954}, // Valparaíso,
+			mapTypeId: 'roadmap'
+		});
+
+		var customControlDiv = document.createElement('div');
+		var customControl = new CustomControl(customControlDiv, map);
+		var estado_pagina=0;
+		var regiones_pagina=0;
+		customControlDiv.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_CENTER].push(customControlDiv);
+
+		var customControlDiv1 = document.createElement('div');
+		var customControl1 = new CustomControl1(customControlDiv1, map);
+		customControlDiv1.index = 1;
+		map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv1);
+
+		/********************************************************************
+			* CustomControl(controlDiv, map)
+		* Función que crea los modulos para el crud de los puntos 
+		********************************************************************/
+		function CustomControl(controlDiv, map) {
+
+			// Set CSS for the control border
+			var controlUI = document.createElement('button');
+			controlUI.type = "button";
+			controlUI.setAttribute("style", `
+				background-color: white;
+				cursor: pointer;
+				padding: 5px 5px;
+				margin: 5px;
+				margin-left: -3px;
+				border-radius: 5px;
+				color:white;
+				font-size: 0.9em;
+				font-weight: bold;
+				height:24.5px;
+				border:none;
+			`);
+
+			controlDiv.appendChild(controlUI);
+			// Set CSS for the control interior
+			var controlText = document.createElement('div');
+			controlText.style.fontFamily = 'Arial,sans-serif';
+			controlText.style.color = 'black';
+			controlText.style.fontSize = '10px';
+			controlText.style.paddingLeft = '4px';
+			controlText.style.paddingRight = '4px';
+			controlText.style.marginTop = '-2.5px';
+			controlText.innerHTML = 'Marker';
+			controlUI.appendChild(controlText);
+
+			var imagen = document.createElement('img');
+			imagen.setAttribute("style",`
+			position: absolute;
+			left: 0px; top: -112px;
+			user-select: none; border: 0px none;
+			padding: 0px; margin: 0px;
+			max-width: none; 
+			width: 10px; 
+			height: 10px;`);
+			/*     imagen.setAttribute("src",`
+				{% static 'imgs/marker.png' %}`)
+				
+				controlText.appendChild(imagen);
+			*/
+			google.maps.event.addDomListener(controlUI, 'click', function () {
+				if(regiones_pagina==0){
+					estado_pagina=1;
+				}
+				else{
+					borrar_poligonos();
+					regiones_pagina=0;
+					estado_pagina=1;
+			}
+		});
+	}
+
+	function CustomControl1(controlDiv, map) {
+
+		// Set CSS for the control border
+		var controlUI = document.createElement('button');
+		controlUI.type = "button";
+		controlUI.setAttribute("style", `
+			background-color: white;
+			cursor: pointer;
+			padding: 0px 8px;
+			margin: 10px;
+			margin-left: -5px;
+			border-radius: 3px;
+			color:white;
+			font-size: 5px;
+			font-weight: bold;
+			height:40px;
+			border:none;
+		`);
+
+		controlDiv.appendChild(controlUI);
+		// Set CSS for the control interior
+		var controlText = document.createElement('div');
+		controlText.style.fontFamily = 'Roboto, Arial, sans-serif';
+		controlText.style.color = 'black';	
+		controlText.style.fontSize = '18px';
+		controlText.style.paddingLeft = '4px';
+		controlText.style.paddingRight = '4px';
+		controlText.style.marginTop = '-2.5px';
+		controlText.innerHTML = 'Mapa Regiones';
+		controlUI.appendChild(controlText);
+
+		var imagen = document.createElement('img');
+		imagen.setAttribute("style",`
+		position: absolute;
+		left: 0px; top: -112px;
+		user-select: none; border: 0px none;
+		padding: 0px; margin: 0px;
+		max-width: none; width: 16px; height: 192px;`);
+		//imagen.setAttribute("src",`
+		//https://maps.gstatic.com/mapfiles/drawing.png`)
+		//controlText.appendChild(imagen);
+
+		google.maps.event.addDomListener(controlUI, 'click', function () {
+		//alert("bla");
+			if (regiones_pagina == 0) { // quiero ver regiones
+				regiones_pagina=1;
+				estado_pagina=0;
+				for (let i in markers) {
+					var marker_aux = markers[i];
+					removeMarker(marker_aux, i); // remove it
+				}
+				
+				cargar_regiones();
+			}
+			else {
+				regiones_pagina=0;  // dejar de ver las regiones
+				borrar_poligonos();
+
+			}
+
+		});
+	}
+
+
+	const drawingManager = new google.maps.drawing.DrawingManager({
+		drawingMode: null,
+		drawingControl: true,
+		drawingControlOptions: {
+			position: google.maps.ControlPosition.TOP_CENTER,
+			drawingModes: [
+
+			],
+		},
+		markerOptions: {
+		draggable: true,
+		},
+		map: map
+	});
+
+
+	google.maps.event.addListener(drawingManager, 'drawingmode_changed', function(){
+		estado_pagina=0;
+	}
+	);
+
+	// Clear the current selection when the drawing mode is changed, or when the
+	// map is clicked.
+	/* 	google.maps.event.addListener(drawingManager, 'drawingmode_changed', clearSelection);
+		google.maps.event.addListener(map, 'click', clearSelection);
+		google.maps.event.addDomListener(document.getElementById('delete-button'), 'click', deleteSelectedShape);
+		google.maps.event.addDomListener(document.getElementById('delete-all-button'), 'click', deleteAllShape);
+	*/
+
+	drawingManager.setMap(map);
+	var infowindow = new google.maps.InfoWindow({});
+	var bounds = new google.maps.LatLngBounds();
+
+	var poligonos = {};
+	var count = 0;
+	
+	/********************************************************************
+		* cargar_regiones()
+	* Función carga los poligonos en el mapa 
+	********************************************************************/
+	function cargar_regiones(){
+		$.getJSON( "/data/", function( data ) {
+			$.each( data, function( key, val ) {
+				var txt = []
+				txt.push("Densidad:" + val['i3'].toString() + " personas por vivienda" );
+				txt.push("Adulto Mayor: " + val['i4'].toString() +" por vivienda" );
+				txt.push("Población: " + val['np'].toString() + " personas");
+				txt.push("Viviendas: " + val['nv'].toString());
+				txt.push("Unidad Vecinal: " + val['uv']);
+				txt.push("Comuna: " + val['com']); //+
+
+				var polygon = new google.maps.Polygon({
+				paths: val['poly'],
+				strokeColor: '#000000',
+				strokeOpacity: 0.2,
+				strokeWeight: 1,
+				fillColor: val['c'],
+				fillOpacity: 0.35,
+				txt: txt.join("<br\>"),
+				contet: "<div style='text-align: left'>"+  txt[0] + "<br>" +txt[1] + "<br>"+txt[2] + "<br>"+txt[3] + "<br>"+txt[4] + "<br>"+txt[5] + "<br>" + "</div>",
+				});
+
+				poligonos[count]=polygon;
+				count = count + 1;
+
+
+				polygon.setMap(map);
+				google.maps.event.addListener(polygon, 'click',function(event,polygon) {
+					infowindow.close();
+					infowindow = new google.maps.InfoWindow({
+						size: new google.maps.Size(150, 50),});
+					infowindow.setContent(this.contet);
+					infowindow.setPosition(event.latLng);
+
+					infowindow.open(map, this);
+				});
+			});
+		});
+	};
+	
+	/********************************************************************
+		* borrar_poligonos()
+	* Función que borra los poligonos del mapa 
+	********************************************************************/
+	function borrar_poligonos (){
+		c = 0;
+		for(let i in poligonos) {
+			poligonos[i].setMap(null); // set poligono setMap to null to remove it from map
+			delete poligonos[i]; // delete poligono instance from poligonos object
+			c = c + 1;
+		}
+	}
+
+
+	// Especificamos la localización, el radio y el tipo de lugares que queremos obtener
+	var categorias = ['hospital', 'park', 'police', 'bank', 'supermarket', 'restaurant'];
+	var i;
+
+	var markers_bd = [];
+	var infoWindowContent = [];
+	var opciones_tipo_valor = [{% for i in tipos %} '{{i.nombre }}', {% endfor %}];
+	var opciones_espanol = [{% for i in tipos %} '{{i.nombre_espanol }}', {% endfor %}];
+
+	$.getJSON( "/markers/", function( data ) {
+		$.each( data, function( key, val ) {
+			markers_bd.push([val["fields"]["nombre"],val["fields"]["lat"],val["fields"]["lng"],val["fields"]["tipo"]]);
+			var aux=[val["fields"]["nombre"],val["fields"]["tipo"],val["pk"]];
+			infoWindowContent.push(aux);
+		});
+		// Add multiple markers to map
+		infowindow = new google.maps.InfoWindow();
+		var ruta = '/media/icons/';
+
+		for( i = 0; i < markers_bd.length; i++ ) {
+			var position = new google.maps.LatLng(markers_bd[i][1], markers_bd[i][2]);
+			bounds.extend(position);
+			var tipo = markers_bd[i][3];
+			var aux = ruta;
+			var path = aux+tipo;
+			var final = path+".png"
+			marker = new google.maps.Marker({
+				position: position,
+				map: map,
+				icon: final,
+				title: markers_bd[i][0],
+				name:infoWindowContent[i][0],
+			});
+			// Add info window to marker
+			google.maps.event.addListener(marker, 'click', (function(marker, i) {
+				return function() {
+					if (estado_pagina==1) {
+								var html_opciones = " <div id='info_holi'>\n" +
+								"        <table class=\"map1\">\n" +
+								"            <tr>\n" +
+								"                <td><input type='text' id='lat1' name='lat1' value='bla' hidden><input type='text' id='lng1' name='lng1' value='bla' hidden><div class='xs-input-group'><label for='nombre1'>Nombre</label><div class='xs-input-group-addon'><i class='fa fa-user color-green xs-input-addon'></i><input type='text' name='nombre1' id='nombre1' value='"+infoWindowContent[i][0]+"' class='xs-input-control' required></div></div></td></tr>\n" +
+								"            <tr style='margin-bottom:15px'><td><div class='xs-input-group'><label for='tipo'>Tipo</label><div class='xs-input-group-addon'><i class='fa fa-check color-green xs-input-addon'></i><select id='tipo1' class='xs-input-control' name='tipo1' required><option value='value1' disabled>-</option>";
+								for (var j = 0; j < opciones_tipo_valor.length; j++) {
+									if(infoWindowContent[i][1]==opciones_tipo_valor[j]){
+										html_opciones=html_opciones+"<option value="+opciones_tipo_valor[j]+" selected>"+opciones_espanol[j]+"</option>";
+									}
+									else{
+										html_opciones=html_opciones+"<option value="+opciones_tipo_valor[j]+" >"+opciones_espanol[j]+"</option>";
+									}
+								};
+								html_opciones= html_opciones+ "</select></div></div></td></tr>\n" +
+								"            <tr><td><input type='button' name='submit' value='Actualizar' onclick='copiar_actualizar("+infoWindowContent[i][2]+")' class='btn btn-primary'></td></tr>\n"+
+								"            <tr><td><input type='button' name='submit' value='Eliminar' onclick='copiar_eliminar("+infoWindowContent[i][2]+")' class='btn btn-danger'></td></tr>\n"+
+								"        </table>\n" +
+								"    </div>";
+								infowindow.setContent(html_opciones);
+								infowindow.open(map, marker);
+					}
+				}
+			})(marker, i));
+			map.fitBounds(bounds);
+		};
+	});
+
+	var getLatLng = function(lat, lng) {
+		return new google.maps.LatLng(lat, lng);
+	};
+
+	var getMarkerUniqueId= function(lat, lng) {
+		return lat + '_' + lng;
+	};
+
+	var markers = {};
+	var infowindow;
+
+	var addMarker = google.maps.event.addListener(map, 'click', function(e) {
+		if (estado_pagina==1) {
+			for (let i in markers) {
+				var marker_aux = markers[i];
+				removeMarker(marker_aux, i); // remove it
+			}
+			var lat = e.latLng.lat(); // lat of clicked point
+			var lng = e.latLng.lng(); // lng of clicked point
+			var markerId = getMarkerUniqueId(lat, lng); // an that will be used to cache this marker in markers object.
+
+			var html_opciones = " <div id='info_"+markerId+"'>\n" +
+			"        <table class=\"map1\">\n" +
+			"            <tr>\n" +
+			"                <td><input type='text' id='lat1' name='lat1' value="+lat+" hidden><input type='text' id='lng1' name='lng1' value="+lng+" hidden><div class='xs-input-group'><label for='nombre1'>Nombre</label><div class='xs-input-group-addon'><i class='fa fa-user color-green xs-input-addon'></i><input type='text' name='nombre1' id='nombre1'  class='xs-input-control' required></div></div></td></tr>\n" +
+			"            <tr style='margin-bottom:15px'><td><div class='xs-input-group'><label for='tipo'>Tipo</label><div class='xs-input-group-addon'><i class='fa fa-check color-green xs-input-addon'></i><select id='tipo1' class='xs-input-control' name='tipo1' required>";
+			for (var i = 0; i < opciones_tipo_valor.length; i++) {
+				html_opciones=html_opciones+"<option value="+opciones_tipo_valor[i]+" >"+opciones_espanol[i]+"</option>";
+			};
+			html_opciones= html_opciones+ "</select></div></div></td></tr>\n" +
+			"            <tr><td><input type='button' name='submit' value='Guardar' onclick='copiar_enviar()' class='btn btn-primary'></td></tr>\n"+
+			"        </table>\n" +
+			"    </div>";
+			var marker = new google.maps.Marker({
+				position: getLatLng(lat, lng),
+				map: map,
+				animation: google.maps.Animation.DROP,
+				id: 'marker_' + markerId,
+				html:html_opciones,
+			});
+
+			infowindow = new google.maps.InfoWindow();
+			infowindow.setContent(marker.html);
+			infowindow.open(map, marker);
+			markers[markerId] = marker; // cache marker in markers object
+			bindMarkerEvents(marker); // bind right click event to marker
+			bindMarkerinfo(marker); // bind infowindow with click event to marker
+		}
+	});
+
+	var bindMarkerinfo = function(marker) {
+		google.maps.event.addListener(marker, "click", function (point) {
+			var markerId = getMarkerUniqueId(point.latLng.lat(), point.latLng.lng()); // get marker id by using clicked point's coordinate
+			var marker = markers[markerId]; // find marker
+			infowindow = new google.maps.InfoWindow();
+			infowindow.setContent(marker.html);
+			infowindow.open(map, marker);
+			//console.log(drawingManager);
+	
+			// removeMarker(marker, markerId); // remove it
+		});
+	};
+
+	/**
+	* Binds right click event to given marker and invokes a callback function that will remove the marker from map.
+	* @param {!google.maps.Marker} marker A google.maps.Marker instance that the handler will binded.
+	*/
+	var bindMarkerEvents = function(marker) {
+		google.maps.event.addListener(marker, "rightclick", function (point) {
+			var markerId = getMarkerUniqueId(point.latLng.lat(), point.latLng.lng()); // get marker id by using clicked point's coordinate
+			var marker = markers[markerId]; // find marker
+			removeMarker(marker, markerId); // remove it
+		});
+	};
+
+	/**
+	* Removes given marker from map.
+	* @param {!google.maps.Marker} marker A google.maps.Marker instance that will be removed.
+	* @param {!string} markerId Id of marker.
+	*/
+	var removeMarker = function(marker, markerId) {
+			marker.setMap(null); // set markers setMap to null to remove it from map
+			delete markers[markerId]; // delete marker instance from markers object
+	};
+
+	var legend = document.getElementById('legend');
+	var div = document.createElement('div');
+	div.innerHTML += '<br/> <b>Densidad Adulto Mayor por Vivienda en Unidad Vecinal </b><br/><img src="{% static 'imgs/colorbar.png' %}">';
+	legend.appendChild(div);
+	map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+	}
+</script>
+
+{% endblock %}

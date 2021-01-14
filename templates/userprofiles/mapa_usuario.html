@@ -1,0 +1,232 @@
+{% extends 'userprofiles/index.html' %}
+{% load static %}
+{% block script %}
+<script>
+	//create a global variable that will point to the tooltip in the DOM
+	var tipObj = null;
+
+	//offset along x and y in px
+	var offset = {x: 10, y: 10};
+
+
+	/********************************************************************
+		* injectTooltip(e,data)
+	* inject the custom tooltip into the DOM
+	********************************************************************/
+	var coordPropName = null;
+
+	/********************************************************************
+		* moveTooltip(e)
+	* update the position of the tooltip based on the event data
+	********************************************************************/
+	function moveTooltip(event){
+			if(tipObj && event && coordPropName){
+				//position it
+			tipObj.style.top = event[coordPropName].clientY + window.scrollY + offset.y + "px";
+			tipObj.style.left = event[coordPropName].clientX + window.scrollX + offset.x + "px";
+		}
+	}
+
+	/********************************************************************
+		* deleteTooltip(e)
+	* delete the tooltip if it exists in the DOM
+	********************************************************************/
+	function deleteTooltip(event){
+			if(tipObj){
+				//delete the tooltip if it exists in the DOM
+				document.body.removeChild(tipObj);
+			tipObj = null;
+		}
+	}
+
+	/********************************************************************
+		* descargarArchivo(contenidoEnBlob, nombreArchivo)
+	* función que crea el archivo que contiene toda la información de
+	* los puntos, para utilizarla debe tener habilitada la api de places
+	********************************************************************/
+	function descargarArchivo(contenidoEnBlob, nombreArchivo) {
+		var reader = new FileReader();
+		reader.onload = function (event) {
+			var save = document.createElement('a');
+			save.href = event.target.result;
+			save.target = '_blank';
+			save.download = nombreArchivo || 'archivo.dat';
+			var clicEvent = new MouseEvent('click', {
+				'view': window,
+					'bubbles': true,
+					'cancelable': true
+			});
+			save.dispatchEvent(clicEvent);
+			(window.URL || window.webkitURL).revokeObjectURL(save.href);
+		};
+		reader.readAsDataURL(contenidoEnBlob);
+	};
+
+	/********************************************************************
+			* generarTexto()
+		* Genera un objeto Blob con los datos en un archivo TXT
+	********************************************************************/
+	function generarTexto() {
+		return new Blob(s, {
+			type: 'text/plain'
+		});
+	};
+
+	var map;
+	var s = [];
+
+	/********************************************************************
+		    * crearMarcador(place)
+		* Crea un marker a partir del place 
+	********************************************************************/
+	function crearMarcador(place){
+
+		// Creamos un marcador
+		var marker = new google.maps.Marker({
+			map: map,
+			position: place.geometry.location,
+		});
+
+		var point = marker.getPosition();
+		map.panTo(point);
+
+		// save location to local storage
+		//localStorage['lastLat'] = point.lat();
+		//localStorage['lastLng'] = point.lng();
+			var tipo = 0;
+		s.push('{"name":"'+place.name+'","lat":'+point.lat()+',"lng":'+point.lng()+',"tipo":"'+place.types[0]+'"},\n');
+	}
+
+	/********************************************************************
+		* initMap()
+	* Función que iniciliza el mapa 
+	********************************************************************/
+	function initMap() {
+
+		map = new google.maps.Map(document.getElementById('map'), {
+			zoom: 6,
+			center: {lat: -33.046770, lng: -71.550954}, // Valparaíso,
+			mapTypeId: 'roadmap'
+		});
+
+		var infowindow = new google.maps.InfoWindow({});
+		var bounds = new google.maps.LatLngBounds();
+
+
+		// Esta sección se utilizó para sacar la información de los puntos con la api places
+		// Especificamos la localización, el radio y el tipo de lugares que queremos obtener
+
+		// Especificamos la localización, el radio y el tipo de lugares que queremos obtener
+		//var categorias = ['hospital', 'park', 'police', 'bank', 'supermarket', 'restaurant'];
+		//var i;
+
+		//for (i=0; i<categorias.length; i++){
+			// tipo = categorias[i];
+
+
+			//var request = {
+			//	location: {lat: -33.039499, lng: -71.629609},
+			//	radius: 50000,
+			//	types: [tipo],
+			//	fields: ["name", "formatted_address"],
+			//};
+
+
+		// Creamos el servicio PlaceService y enviamos la petición.
+			//var service = new google.maps.places.PlacesService(map);
+
+			//service.nearbySearch(request, function(results, status) {
+			//if (status === google.maps.places.PlacesServiceStatus.OK) {
+			//	for (var i = 0; i < results.length; i++) {
+			//	crearMarcador(results[i]);
+			//	}
+
+			//}
+			//});
+		//}
+
+		// JSON con los poligonos
+		$.getJSON( "/data/", function( data ) {
+			$.each( data, function( key, val ) {
+				var txt = []
+				txt.push("Densidad:" + val['i3'].toString() + " personas por vivienda" );
+				txt.push("Adulto Mayor: " + val['i4'].toString() +" por vivienda" );
+				txt.push("Población: " + val['np'].toString() + " personas");
+				txt.push("Viviendas: " + val['nv'].toString());
+				txt.push("Unidad Vecinal: " + val['uv']);
+				txt.push("Comuna: " + val['com']); //+
+
+				var polygon = new google.maps.Polygon({
+					paths: val['poly'],
+					strokeColor: '#000000',
+					strokeOpacity: 0.2,
+					strokeWeight: 1,
+					fillColor: val['c'],
+					fillOpacity: 0.35,
+					txt: txt.join("<br\>"),
+					contet: "<div style='text-align: left'>"+  txt[0] + "<br>" +txt[1] + "<br>"+txt[2] + "<br>"+txt[3] + "<br>"+txt[4] + "<br>"+txt[5] + "<br>" + "</div>",
+				});
+
+				polygon.setMap(map);
+				google.maps.event.addListener(polygon, 'click',function(event,polygon) {
+					infowindow.close();
+					infowindow = new google.maps.InfoWindow({
+						size: new google.maps.Size(150, 50),});
+					infowindow.setContent(this.contet);
+					infowindow.setPosition(event.latLng);
+
+					infowindow.open(map, this);
+				});
+			});
+		});
+
+		var markers_bd = [];
+		var infoWindowContent = [];
+
+		// lectura del json con los markers a cargar en el mapa
+		$.getJSON( "/markers/", function( data ) {
+			$.each( data, function( key, val ) {
+				markers_bd.push([val["fields"]["nombre"],val["fields"]["lat"],val["fields"]["lng"],val["fields"]["tipo"]]);
+				var aux=['<div class="info_content">'+val["fields"]["nombre"]+'</div>'];
+				infoWindowContent.push(aux);
+			});
+
+			// Add multiple markers to map
+			var infoWindow = new google.maps.InfoWindow(), marker, i;
+			var ruta = '/media/icons/';
+
+			for( i = 0; i < markers_bd.length; i++ ) {
+				var position = new google.maps.LatLng(markers_bd[i][1], markers_bd[i][2]);
+				bounds.extend(position);
+				var tipo = markers_bd[i][3];
+				var aux = ruta;
+				var path = aux+tipo;
+				var final = path+".png"
+				marker = new google.maps.Marker({
+					position: position,
+					map: map,
+					icon: final,
+					title: markers_bd[i][0]
+				});
+				// Add info window to marker
+				google.maps.event.addListener(marker, 'click', (function(marker, i) {
+					return function() {
+						infoWindow.setContent(infoWindowContent[i][0]);
+						infoWindow.open(map, marker);
+					}
+				})
+				(marker, i));
+
+				// Center the map to fit all markers on the screen
+				map.fitBounds(bounds);
+			};
+		});
+
+		var legend = document.getElementById('legend');
+		var div = document.createElement('div');
+		div.innerHTML += '<br/> <b>Densidad Adulto Mayor por Vivienda en Unidad Vecinal </b><br/><img src="{% static 'imgs/colorbar.png' %}">';
+		legend.appendChild(div);
+		map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+	}
+</script>
+{% endblock %}

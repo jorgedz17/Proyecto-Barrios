@@ -1,0 +1,25 @@
+version: '3.3'
+services:
+  web:
+    build: ./
+    command: gunicorn RiskmapProject.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - 8000
+    env_file:
+      - ./.env.dev
+    volumes:
+      - static_volume:/usr/src/app/staticfiles
+      - ./db.sqlite3:/usr/src/app/db.sqlite3   
+    
+  nginx:
+    build: ./nginx
+    ports:      
+      - 8082:443      
+    depends_on:
+      - web
+    volumes:
+      - static_volume:/usr/src/app/staticfiles
+      - /files/dh-param/dhparam.pem:/etc/ssl/certs/dhparam.pem
+      - /etc/letsencrypt/:/etc/letsencrypt/
+volumes:
+  static_volume:

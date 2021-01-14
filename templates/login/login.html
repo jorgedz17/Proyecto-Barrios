@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+		<!--== Carga de archivos static ===============================================================================-->
+			<title>RiskMap</title>
+			<!--===============================================================================================-->
+			<link rel="icon" type="image/png" href="{% static 'userprofiles/images/icons/favicon.ico' %}"/>
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/bootstrap/css/bootstrap.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/fonts/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/fonts/iconic/css/material-design-iconic-font.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/animate/animate.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/css-hamburgers/hamburgers.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/animsition/css/animsition.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/select2/select2.min.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/vendor/daterangepicker/daterangepicker.css' %}">
+			<!--===============================================================================================-->
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/css/util.css' %}">
+			<link rel="stylesheet" type="text/css" href="{% static 'userprofiles/css/main.css' %}">
+			<!--===============================================================================================-->
+    </head>
+
+	<!--== Formulario Login ======================================================================================-->
+    <body>
+
+        <div class="limiter">
+      		<div class="container-login100">
+      			<div class="wrap-login100">
+      				<form class="login100-form validate-form" action="."  autocomplete="off" method="POST">
+                		<span class="login100-form-title p-b-26" style="margin-bottom: 20px">RiskMap <br></span>
+      					<div class="wrap-input100 validate-input" data-validate = "Valid email is: a@b.c">
+      						<input class="input100" type="text" autocomplete="off"  name="email">
+      						<span class="focus-input100" data-placeholder="Email"></span>
+      					</div>
+
+      					<div class="wrap-input100 validate-input" data-validate="Enter password">
+      						<span class="btn-show-pass">
+      							<i class="zmdi zmdi-eye"></i>
+      						</span>
+      						<input class="input100" type="password" name="pass">
+      						<span class="focus-input100" autocomplete="off" data-placeholder="Contraseña"></span>
+      					</div>
+
+      					<div class="container-login100-form-btn">
+							{% if error %}
+								<div class="alert alert-dismissible alert-danger">
+									<button type="button" class="close" data-dismiss="alert">&times;</button>
+									Combinación usuario contraseña incorrecta
+								</div>
+							{% endif %}
+      						<div class="wrap-login100-form-btn">
+      							<div class="login100-form-bgbtn"></div>
+      							<button class="login100-form-btn">Login</button>
+                  				{% csrf_token %}
+      						</div>
+      					</div>
+
+      					<div class="text-center p-t-115">
+                      		<img class=p-b-26 src="/media/LOGO-USM.png" width="40%" height="40%" ;alt="Logo">
+      					</div>
+      				</form>
+      			</div>
+      		</div>
+      	</div>
+
+
+      	<div id="dropDownSelect1"></div>
+
+      <!--== Carga de js =======================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/jquery/jquery-3.2.1.min.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/animsition/js/animsition.min.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/bootstrap/js/popper.js' %}"></script>
+      	<script src="{% static 'userprofiles/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/select2/select2.min.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/daterangepicker/moment.min.js' %}"></script>
+      	<script src="{% static 'userprofiles/vendor/daterangepicker/daterangepicker.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/vendor/countdowntime/countdowntime.js' %}"></script>
+      <!--===============================================================================================-->
+      	<script src="{% static 'userprofiles/js/main.js' %}"></script>
+
+      </body>
+</html>

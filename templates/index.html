@@ -1,0 +1,469 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="en">
+	<head>
+		<!--== Carga de statics====================================================================================-->
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<title>Proyecto Barrios</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400%7CPoppins:200,400,500,600,700%7CPlayfair+Display:400,700i" rel="stylesheet">
+		<link rel="icon" type="image/png" href="favicon.ico">
+		<!-- Place favicon.ico in the root directory -->
+		<link rel="apple-touch-icon" href="apple-touch-icon.png">
+		<script src="{% static 'proj4.js' %}"></script>
+		<script src="{% static "dashboard/js/jquery-3.2.1.min.js" %}"></script>
+		<!-- Icon foont list -->
+		<link rel="stylesheet" href="{% static "dashboard/css/iconfont.css" %}">
+		<link rel="stylesheet" href="{% static "dashboard/css/jquery.dataTables.css" %}">
+		<link rel="stylesheet" href="{% static "dashboard/css/font-awesome.min.css" %}">
+
+		<!-- bootstrap -->
+		<link rel="stylesheet" href="{% static "dashboard/css/bootstrap.min.css" %}">
+		<!-- isotope -->
+		<link rel="stylesheet" href="{% static "dashboard/css/isotope.css" %}">
+		<!-- magnific -->
+		<link rel="stylesheet" href="{% static "dashboard/css/magnific-popup.css" %}">
+		<!-- owl carousel -->
+		<link rel="stylesheet" href="{% static "dashboard/css/owl.carousel.min.css" %}">
+		<link rel="stylesheet" href="{% static "dashboard/css/owl.theme.default.min.css" %}">
+		<!-- woocommerce -->
+		<link rel="stylesheet" href="{% static "dashboard/css/woocommerce.css" %}">
+
+
+		<!--For Plugins external css-->
+		<link rel="stylesheet" href="{% static "dashboard/css/plugins.css" %}" />
+
+		<!--Theme custom css -->
+		<link rel="stylesheet" href="{% static "dashboard/css/style.css" %}">
+
+		<!--Theme Responsive css-->
+		<link rel="stylesheet" href="{% static "dashboard/css/responsive.css" %}" />
+			<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+		<script src="{% static "dashboard/js/vendor/modernizr-2.8.3-respond-1.4.2.min.js" %}"></script>
+		
+		<!--== Estilos =======================================================================================-->
+		<style>
+			/* Always set the map height explicitly to define the size of the div
+			* element that contains the map. */
+			#map {
+				position: initial;
+			}
+			/* Optional: Makes the sample page fill the window. */
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			#legend {
+				font-family: Arial, sans-serif;
+				background: #fff;
+				padding: 10px;
+				margin: 10px;
+				border: 1px solid #000;
+				border-radius: 5px;
+				opacity: 0.7;
+			}
+			.legend-row {
+				vertical-align: middle;
+				text-align: center;
+			}
+			.navbar a {
+				float: left;
+				position: block;
+				color: #f2f2f2;
+				text-align: center;
+				padding: 14px 16px;
+				text-decoration: none;
+				font-size: 17px;
+			}
+
+		</style>
+
+	</head>
+	
+	<body class="woocommerce">
+
+		<div id="preloader">
+			<div class="spinner">
+				<div class="double-bounce1"></div>
+				<div class="double-bounce2"></div>
+			</div>
+		</div>
+		<!-- home section -->
+		<!-- header version inner menu -->
+		<header class="xs-header-height xs-menu-style-transparent xs-menu-style-border fundpress-header-main-version color-navy-blue">
+			<div class="container">
+				<nav class="xs-menus fundpress-menu">
+					<div class="nav-header">
+						<div class="nav-toggle"></div>
+						<a class="nav-brand nav-logo" href="/">
+							<img src="/media/logo-usm.svg" alt="">
+						</a>
+					</div><!-- . END -->
+					<div class="nav-menus-wrapper">
+						<div class="xs-logo-wraper">
+							<h4 class="color-navy-blue xs-mb-0"  style="margin-top:25px; margin-left:18px;">Proyecto Barrios</h4>
+						</div>
+						<div class="xs-logo-wraper">
+							<img src="/media/logo-usm.svg" width="100%" height="100%" style=margin-top:38px; alt="">
+						</div>
+						<ul class="nav-menu">
+							{% block usuario %}
+							<li><a href="/">Mapa</a></li>
+							<li><a href="/about/">Sobre Nosotros</a></li>
+							{% endblock %}
+						</ul>
+						<div class="xs-navs-button">
+							<ul class="xs-icon-with-text fundpress-icon-menu">
+								{% if logueado %}
+								<!--li><a href="/user/main/" >Dashboard</a></li-->
+								<li class="d-block d-lg-none d-xl-block"><a href="/user/logout/" class="xs-btn round-btn green-btn">Cerrar Sesión</a></li>
+								{% else %}
+								<!--li><a href="/user/registro/" >Registrate</a></li-->
+								<li class="d-block d-lg-none d-xl-block"><a href="/login" class="xs-btn round-btn green-btn">Iniciar Sesión</a></li>
+								{% endif %}
+							</ul>
+						</div>
+					</div><!-- .nav-menus-wrapper END -->
+				</nav><!-- .xs-menus .fundpress-menu END -->
+			</div>
+		</header>
+		<!-- header version inner menu closed -->
+
+		{% block content %}
+		<!-- modal -->
+		<main class="xs-all-content-wrapper">
+			<section class="xs-bg xs-section-padding fundpress-sponsor-section" >
+				<div class="xs-solid-overlay xs-bg-white"></div>
+				<div class="fundpress-partners-wraper">
+					<div class="content-center">
+						{% block agregar_punto %}
+						{% endblock %}
+						{% block instrucciones %}
+						{% endblock %}
+						<div class="xs-map-section">
+							<div id="map" class="xs-map"> </div>
+						</div>
+						<div id="legend"><h3>Leyenda</h3></div>
+					</div>
+				</div>
+			</section>    <!-- End sponsor section -->
+		</main>
+		{% endblock %}
+
+		<!-- footer section -->
+		<footer class="xs-footer-section xs-fixed-footer fundpress-footer-section">
+			<div class="fundpress-footer-top-layer">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="fundpress-single-footer">
+								<div class="xs-footer-logo">
+									<a href="/"><img src="/media/Logo_UTFSM.png" width="20%" height="20%" alt=""></a>
+								</div>
+								<div class="fundpress-footer-content">
+									<p style="text-align:justify">Este proyecto es desarrollado por el Departamento de Informática de la Universidad Técnica Federico Santa María.<br></p>
+								</div>
+								<ul class="xs-social-list fundpress-social-list">
+									<li><a href="https://www.instagram.com/informaticausm/?hl=es-la" class="color-instagram full-round"><i class="fa fa-instagram"></i></a></li>
+								</ul><!-- .xs-social-list .fundpress-social-list END -->
+							</div><!-- .fundpress-single-footer END -->
+						</div>
+						<div class="col-md-2">
+							<div class="fundpress-single-footer">
+								<nav class="xs-footer-menu" style="margin-top:120px;">
+									<ul>
+										<li><a href="/">Mapa</a></li>
+									</ul>
+								</nav><!-- .xs-footer-menu .xs-block-menu END -->
+							</div><!-- .fundpress-single-footer END -->
+						</div>
+						<div class="col-md-2">
+							<div class="fundpress-single-footer">
+								<div class="xs-footer-logo">
+									<nav class="xs-footer-menu" style="margin-top:120px;">
+										<ul>
+											<li><a href="/about/">Sobre Nostros</a></li>
+										</ul>
+									</nav>
+								</div>
+								<!-- .xs-footer-menu .xs-block-menu END -->
+							</div><!-- .fundpress-single-footer END -->
+
+						</div>
+						<div class="col-md-2">
+							<div class="fundpress-single-footer">
+								<nav class="xs-footer-menu" style="margin-top:120px;">
+									<ul>
+										<li><a href="#">Ingresar</a></li>
+										<!--li><a href="/user/registro/">Registrate</a></li-->
+									</ul>
+								</nav><!-- .xs-footer-menu .xs-block-menu END -->
+							</div><!-- .fundpress-single-footer END -->
+						</div>
+					</div>
+				</div>
+			</div><!-- .xs-footer-wraper .fundpress-footer-top-layer END -->
+		</footer>
+
+		{% block script %}
+		<script>
+			//create a global variable that will point to the tooltip in the DOM
+			var tipObj = null;
+
+			//offset along x and y in px
+			var offset = {x: 10, y: 10};
+
+
+			/********************************************************************
+				* injectTooltip(e,data)
+			* inject the custom tooltip into the DOM
+			********************************************************************/
+			var coordPropName = null;
+
+			/********************************************************************
+				* moveTooltip(e)
+			* update the position of the tooltip based on the event data
+			********************************************************************/
+			function moveTooltip(event){
+					if(tipObj && event && coordPropName){
+						//position it
+					tipObj.style.top = event[coordPropName].clientY + window.scrollY + offset.y + "px";
+					tipObj.style.left = event[coordPropName].clientX + window.scrollX + offset.x + "px";
+				}
+			}
+
+			/********************************************************************
+				* deleteTooltip(e)
+			* delete the tooltip if it exists in the DOM
+			********************************************************************/
+			function deleteTooltip(event){
+					if(tipObj){
+						//delete the tooltip if it exists in the DOM
+						document.body.removeChild(tipObj);
+					tipObj = null;
+				}
+			}
+
+			/********************************************************************
+				* descargarArchivo(contenidoEnBlob, nombreArchivo)
+			* función que crea el archivo que contiene toda la información de
+			* los puntos, para utilizarla debe tener habilitada la api de places
+			********************************************************************/
+			function descargarArchivo(contenidoEnBlob, nombreArchivo) {
+				var reader = new FileReader();
+				reader.onload = function (event) {
+					var save = document.createElement('a');
+					save.href = event.target.result;
+					save.target = '_blank';
+					save.download = nombreArchivo || 'archivo.dat';
+					var clicEvent = new MouseEvent('click', {
+						'view': window,
+							'bubbles': true,
+							'cancelable': true
+					});
+					save.dispatchEvent(clicEvent);
+					(window.URL || window.webkitURL).revokeObjectURL(save.href);
+				};
+				reader.readAsDataURL(contenidoEnBlob);
+			};
+
+			/********************************************************************
+				* generarTexto()
+			* Genera un objeto Blob con los datos en un archivo TXT
+			********************************************************************/
+			function generarTexto() {
+				return new Blob(s, {
+					type: 'text/plain'
+				});
+			};
+
+			var map;
+			var s = [];
+			
+			/********************************************************************
+				* crearMarcador(place)
+			* Crea un marker a partir del place 
+			********************************************************************/
+			function crearMarcador(place){
+				// Creamos un marcador
+				var marker = new google.maps.Marker({
+					map: map,
+					position: place.geometry.location,
+				});
+
+				var point = marker.getPosition();
+				map.panTo(point);
+
+				// save location to local storage
+				//localStorage['lastLat'] = point.lat();
+				//localStorage['lastLng'] = point.lng();
+				var tipo = 0;
+				s.push('{"name":"'+place.name+'","lat":'+point.lat()+',"lng":'+point.lng()+',"tipo":"'+place.types[0]+'"},\n');
+			}
+
+			/********************************************************************
+				* initMap()
+			* Función que iniciliza el mapa 
+			********************************************************************/
+			function initMap() {
+				
+				// Mapa con sus atributos, info en la api de google maps
+				map = new google.maps.Map(document.getElementById('map'), {
+					zoom: 6,
+					center: {lat: -33.046770, lng: -71.550954}, // Valparaíso,
+					mapTypeId: 'roadmap'
+				});
+
+				var infowindow = new google.maps.InfoWindow({});
+				var bounds = new google.maps.LatLngBounds();
+
+
+				// Esta sección se utilizó para sacar la información de los puntos con la api places
+				// Especificamos la localización, el radio y el tipo de lugares que queremos obtener
+				
+				// var categorias = ['hospital', 'park', 'police', 'bank', 'supermarket', 'restaurant'];
+				// var i;
+
+				//for (i=0; i<categorias.length; i++){
+					// tipo = categorias[i];
+
+
+					//var request = {
+					//	location: {lat: -33.039499, lng: -71.629609},
+					//	radius: 50000,
+					//	types: [tipo],
+					//	fields: ["name", "formatted_address"],
+					//};
+
+
+				// Creamos el servicio PlaceService y enviamos la petición.
+					//var service = new google.maps.places.PlacesService(map);
+
+					//service.nearbySearch(request, function(results, status) {
+					//if (status === google.maps.places.PlacesServiceStatus.OK) {
+					//	for (var i = 0; i < results.length; i++) {
+					//	crearMarcador(results[i]);
+					//	}
+
+					//}
+					//});
+				//}
+
+				// Json con la información de los poligonos
+				$.getJSON( "{{ tdata }}", function( data ) {
+					$.each( data, function( key, val ) {
+						var txt = []
+						txt.push("Densidad:" + val['i3'].toString() + " personas por vivienda" );
+						txt.push("Adulto Mayor: " + val['i4'].toString() +" por vivienda" );
+						txt.push("Población: " + val['np'].toString() + " personas");
+						txt.push("Viviendas: " + val['nv'].toString());
+						txt.push("Unidad Vecinal: " + val['uv']);
+						txt.push("Comuna: " + val['com']); //+
+
+						var polygon = new google.maps.Polygon({
+							paths: val['poly'],
+							strokeColor: '#000000',
+							strokeOpacity: 0.2,
+							strokeWeight: 1,
+							fillColor: val['c'],
+							fillOpacity: 0.35,
+							txt: txt.join("<br\>"),
+							contet: "<div style='text-align: left'>"+  txt[0] + "<br>" +txt[1] + "<br>"+txt[2] + "<br>"+txt[3] + "<br>"+txt[4] + "<br>"+txt[5] + "<br>" + "</div>",
+						});
+
+						polygon.setMap(map);
+						google.maps.event.addListener(polygon, 'click',function(event,polygon) {
+							infowindow.close();
+							infowindow = new google.maps.InfoWindow({
+								size: new google.maps.Size(150, 50),
+							});
+							infowindow.setContent(this.contet);
+							infowindow.setPosition(event.latLng);
+
+							infowindow.open(map, this);
+						});
+					});
+				});
+
+				var markers_bd = [];
+				var infoWindowContent = [];
+
+				// lectura del json con los markers a cargar en el mapa
+				$.getJSON( "{{ tmarkers }}", function( data ) {
+					$.each( data, function( key, val ) {
+						markers_bd.push([val["fields"]["nombre"],val["fields"]["lat"],val["fields"]["lng"],val["fields"]["tipo"]]);
+						var aux=['<div class="info_content">'+val["fields"]["nombre"]+'</div>'];
+						infoWindowContent.push(aux);
+					});
+					// Add multiple markers to map
+					var infoWindow = new google.maps.InfoWindow(), marker, i;
+
+					// ruta de los iconos
+					var ruta = '/media/icons/';
+
+					for( i = 0; i < markers_bd.length; i++ ) {
+							var position = new google.maps.LatLng(markers_bd[i][1], markers_bd[i][2]);
+							bounds.extend(position);
+							var tipo = markers_bd[i][3];
+							var aux = ruta;
+							var path = aux+tipo;
+							var final = path+".png"
+							marker = new google.maps.Marker({
+										position: position,
+										map: map,
+										icon: final,
+										title: markers_bd[i][0]
+							});
+							// Add info window to marker
+							google.maps.event.addListener(marker, 'click', (function(marker, i) {
+									return function() {
+										infoWindow.setContent(infoWindowContent[i][0]);
+										infoWindow.open(map, marker);
+									}
+							})(marker, i));
+
+							// Center the map to fit all markers on the screen
+							map.fitBounds(bounds);
+					};
+				});
+
+				var legend = document.getElementById('legend');
+				var div = document.createElement('div');
+				div.innerHTML += '<br/> <b>Densidad Adulto Mayor por Vivienda en Unidad Vecinal </b><br/><img src="{% static 'imgs/colorbar.png' %}">';
+				legend.appendChild(div);
+				map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+			}
+		</script>
+		{% endblock %}
+
+		<script src="{% static "dashboard/js/plugins.js" %}"></script>
+		<script src="{% static "dashboard/js/Popper.js" %}"></script>
+		<script src="{% static "dashboard/js/bootstrap.min.js" %}"></script>
+		<script src="{% static "dashboard/js/isotope.pkgd.min.js" %}"></script>
+		<script src="{% static "dashboard/js/jquery.easing.1.3.js" %}"></script>
+		<script src="{% static "dashboard/js/jquery.countdown.min.js" %}"></script>
+		<script src="{% static "dashboard/js/jquery.magnific-popup.min.js" %}"></script>
+		<script src="{% static "dashboard/js/owl.carousel.min.js" %}"></script>
+		<script src="{% static "dashboard/js/parallax.min.js" %}"></script>
+
+		<script src="{% static "dashboard/js/jquery.easypiechart.min.js" %}"></script>
+		<script src="{% static "dashboard/js/spectragram.min.js" %}"></script>
+		<script src="{% static "dashboard/js/jquery.waypoints.min.js" %}"></script>
+		<script src="{% static "dashboard/js/scrollax.js" %}"></script>
+
+		<script src="{% static "dashboard/js/main.js" %}"></script>
+
+	</body>
+
+	<script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+	<script async defer
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQfK8mI_pgcDRJ46UCHOOfX34BztmAI9s&callback=initMap&libraries=places&libraries=drawing">
+	</script>
+	<script src="{% static 'bootstrap.bundle.js' %}"></script>
+
+
+</html>
